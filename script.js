@@ -1,6 +1,8 @@
 let array = [];
 let delay = 50;
 let isSorting = false;
+let comparisonCount = 0;
+let swapCount = 0;
 
 const container = document.getElementById('array');
 const sizeSlider = document.getElementById('sizeSlider');
@@ -10,17 +12,34 @@ const randomizeBtn = document.getElementById('randomizeBtn');
 const sortBtn = document.getElementById('sortBtn');
 const sizeValue = document.getElementById('sizeValue');
 const speedValue = document.getElementById('speedValue');
+const comparisonDisplay = document.getElementById('comparisonCount');
+const swapDisplay = document.getElementById('swapCount');
+const algoDesc = document.getElementById('algoDesc');
+
+const algoDescriptions = {
+    bubble: "Bubble Sort repeatedly steps through the list, compares adjacent elements, and swaps them if they are in the wrong order.",
+    selection: "Selection Sort repeatedly finds the minimum element from the unsorted part and puts it at the beginning.",
+    insertion: "Insertion Sort builds the sorted array one item at a time by comparing and inserting elements into their correct position.",
+    merge: "Merge Sort divides the array into halves, sorts each half, and merges them back together.",
+    quick: "Quick Sort picks a pivot and partitions the array around the pivot, recursively sorting the subarrays."
+};
 
 // Update displayed values for sliders
 sizeSlider.addEventListener('input', () => {
     sizeValue.textContent = sizeSlider.value;
     if (!isSorting) generateArray();
 });
-
 speedSlider.addEventListener('input', () => {
     speedValue.textContent = speedSlider.value;
     delay = 101 - speedSlider.value;
 });
+
+// Show algorithm description
+algoSelect.addEventListener('change', () => {
+    const desc = algoDescriptions[algoSelect.value] || "";
+    algoDesc.textContent = desc;
+});
+algoDesc.textContent = algoDescriptions[algoSelect.value];
 
 // Button event listeners
 randomizeBtn.addEventListener('click', generateArray);
@@ -28,8 +47,10 @@ sortBtn.addEventListener('click', async () => {
     if (isSorting) return;
     isSorting = true;
     sortBtn.disabled = true;
-    sortBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sorting...';
-    
+    sortBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sorting...';
+    comparisonCount = 0;
+    swapCount = 0;
+    updateMetrics();
     try {
         const algorithm = algoSelect.value;
         switch (algorithm) {
@@ -44,10 +65,15 @@ sortBtn.addEventListener('click', async () => {
     } finally {
         isSorting = false;
         sortBtn.disabled = false;
-        sortBtn.innerHTML = '<i class="fas fa-play"></i> Sort';
+        sortBtn.innerHTML = '<i class="fa fa-play"></i> Sort';
         highlightComplete();
     }
 });
+
+function updateMetrics() {
+    comparisonDisplay.textContent = comparisonCount;
+    swapDisplay.textContent = swapCount;
+}
 
 function generateArray() {
     array = [];
@@ -55,9 +81,8 @@ function generateArray() {
     const size = sizeSlider.value;
     const containerWidth = container.clientWidth;
     const barWidth = Math.max(2, Math.floor(containerWidth / size) - 2);
-    
     for (let i = 0; i < size; i++) {
-        const value = Math.floor(Math.random() * 380) + 20; // Adjusted for better visualization
+        const value = Math.floor(Math.random() * 380) + 20;
         array.push(value);
         const bar = document.createElement('div');
         bar.style.height = `${value}px`;
@@ -65,42 +90,48 @@ function generateArray() {
         bar.classList.add('bar');
         container.appendChild(bar);
     }
+    updateMetrics();
 }
-
+function resetBarColors() {
+    const bars = document.getElementsByClassName('bar');
+    for (let bar of bars) {
+        bar.className = 'bar';
+    }
+}
 function highlightComplete() {
     const bars = document.getElementsByClassName('bar');
     for (let i = 0; i < bars.length; i++) {
         setTimeout(() => {
-            bars[i].style.backgroundColor = '#4caf50';
-            bars[i].style.boxShadow = '0 0 10px #4caf50';
-        }, i * 20);
+            bars[i].className = 'bar sorted';
+        }, i * 10);
     }
-    
-    setTimeout(() => {
-        for (let i = 0; i < bars.length; i++) {
-            bars[i].style.boxShadow = 'none';
-        }
-    }, bars.length * 20 + 1000);
 }
+
+// Sorting Algorithms with Visuals
 
 async function bubbleSort() {
     const bars = document.getElementsByClassName('bar');
     for (let i = 0; i < array.length; i++) {
         for (let j = 0; j < array.length - i - 1; j++) {
-            bars[j].style.backgroundColor = "#ff5a5f";
-            bars[j + 1].style.backgroundColor = "#ff5a5f";
-            
+            comparisonCount++;
+            updateMetrics();
+            bars[j].className = 'bar comparing';
+            bars[j + 1].className = 'bar comparing';
+            await sleep(delay);
             if (array[j] > array[j + 1]) {
-                await new Promise(r => setTimeout(r, delay));
+                swapCount++;
+                updateMetrics();
                 [array[j], array[j + 1]] = [array[j + 1], array[j]];
                 bars[j].style.height = `${array[j]}px`;
                 bars[j + 1].style.height = `${array[j + 1]}px`;
+                bars[j].className = 'bar swapping';
+                bars[j + 1].className = 'bar swapping';
+                await sleep(delay);
             }
-            
-            bars[j].style.backgroundColor = "#3a86ff";
-            bars[j + 1].style.backgroundColor = "#3a86ff";
+            bars[j].className = 'bar';
+            bars[j + 1].className = 'bar';
         }
-        bars[array.length - i - 1].style.backgroundColor = "#4caf50";
+        bars[array.length - i - 1].className = 'bar sorted';
     }
 }
 
@@ -108,29 +139,32 @@ async function selectionSort() {
     const bars = document.getElementsByClassName('bar');
     for (let i = 0; i < array.length; i++) {
         let minIndex = i;
-        bars[minIndex].style.backgroundColor = "#ffbe0b";
-        
+        bars[minIndex].className = 'bar key';
         for (let j = i + 1; j < array.length; j++) {
-            bars[j].style.backgroundColor = "#00bbf9";
-            await new Promise(r => setTimeout(r, delay));
-            
+            comparisonCount++;
+            updateMetrics();
+            bars[j].className = 'bar comparing';
+            await sleep(delay);
             if (array[j] < array[minIndex]) {
-                bars[minIndex].style.backgroundColor = "#3a86ff";
+                if (minIndex !== i) bars[minIndex].className = 'bar';
                 minIndex = j;
-                bars[minIndex].style.backgroundColor = "#ffbe0b";
+                bars[minIndex].className = 'bar key';
             } else {
-                bars[j].style.backgroundColor = "#3a86ff";
+                bars[j].className = 'bar';
             }
         }
-        
         if (minIndex !== i) {
-            await new Promise(r => setTimeout(r, delay));
+            swapCount++;
+            updateMetrics();
             [array[i], array[minIndex]] = [array[minIndex], array[i]];
             bars[i].style.height = `${array[i]}px`;
             bars[minIndex].style.height = `${array[minIndex]}px`;
+            bars[i].className = 'bar swapping';
+            bars[minIndex].className = 'bar swapping';
+            await sleep(delay);
         }
-        
-        bars[i].style.backgroundColor = "#4caf50";
+        bars[i].className = 'bar sorted';
+        if (minIndex !== i) bars[minIndex].className = 'bar';
     }
 }
 
@@ -139,24 +173,27 @@ async function insertionSort() {
     for (let i = 1; i < array.length; i++) {
         let key = array[i];
         let j = i - 1;
-        bars[i].style.backgroundColor = "#00bbf9";
-        
+        bars[i].className = 'bar key';
+        await sleep(delay);
         while (j >= 0 && array[j] > key) {
-            bars[j].style.backgroundColor = "#ff5a5f";
-            await new Promise(r => setTimeout(r, delay));
+            comparisonCount++;
+            updateMetrics();
+            bars[j].className = 'bar comparing';
+            await sleep(delay);
+            swapCount++;
+            updateMetrics();
             array[j + 1] = array[j];
             bars[j + 1].style.height = `${array[j + 1]}px`;
-            bars[j].style.backgroundColor = "#3a86ff";
+            bars[j].className = 'bar';
             j = j - 1;
         }
-        
         array[j + 1] = key;
         bars[j + 1].style.height = `${array[j + 1]}px`;
-        bars[j + 1].style.backgroundColor = "#3a86ff";
-    }
-    
-    for (let i = 0; i < bars.length; i++) {
-        bars[i].style.backgroundColor = "#4caf50";
+        bars[j + 1].className = 'bar key';
+        await sleep(delay);
+        for (let k = 0; k <= i; k++) {
+            bars[k].className = 'bar sorted';
+        }
     }
 }
 
@@ -173,38 +210,44 @@ async function merge(l, m, r) {
     let left = array.slice(l, m + 1);
     let right = array.slice(m + 1, r + 1);
     let i = 0, j = 0, k = l;
-
     while (i < left.length && j < right.length) {
-        bars[k].style.backgroundColor = "#8338ec";
-        await new Promise(r => setTimeout(r, delay));
-        
+        comparisonCount++;
+        updateMetrics();
+        bars[k].className = 'bar comparing';
+        await sleep(delay);
         if (left[i] <= right[j]) {
             array[k] = left[i++];
         } else {
             array[k] = right[j++];
+            swapCount++;
+            updateMetrics();
         }
-        
         bars[k].style.height = `${array[k]}px`;
-        bars[k].style.backgroundColor = "#3a86ff";
+        bars[k].className = 'bar';
         k++;
     }
-
     while (i < left.length) {
-        bars[k].style.backgroundColor = "#8338ec";
-        await new Promise(r => setTimeout(r, delay));
+        bars[k].className = 'bar swapping';
+        await sleep(delay);
         array[k] = left[i++];
         bars[k].style.height = `${array[k]}px`;
-        bars[k].style.backgroundColor = "#3a86ff";
+        bars[k].className = 'bar';
         k++;
+        swapCount++;
+        updateMetrics();
     }
-
     while (j < right.length) {
-        bars[k].style.backgroundColor = "#8338ec";
-        await new Promise(r => setTimeout(r, delay));
+        bars[k].className = 'bar swapping';
+        await sleep(delay);
         array[k] = right[j++];
         bars[k].style.height = `${array[k]}px`;
-        bars[k].style.backgroundColor = "#3a86ff";
+        bars[k].className = 'bar';
         k++;
+        swapCount++;
+        updateMetrics();
+    }
+    for (let idx = l; idx <= r; idx++) {
+        bars[idx].className = 'bar sorted';
     }
 }
 
@@ -219,31 +262,39 @@ async function quickSort(low, high) {
 async function partition(low, high) {
     const bars = document.getElementsByClassName('bar');
     let pivot = array[high];
-    bars[high].style.backgroundColor = "#4caf50";
+    bars[high].className = 'bar key';
     let i = low - 1;
-
     for (let j = low; j <= high - 1; j++) {
-        bars[j].style.backgroundColor = "#ffbe0b";
-        await new Promise(r => setTimeout(r, delay));
-        
+        comparisonCount++;
+        updateMetrics();
+        bars[j].className = 'bar comparing';
+        await sleep(delay);
         if (array[j] < pivot) {
             i++;
+            swapCount++;
+            updateMetrics();
             [array[i], array[j]] = [array[j], array[i]];
             bars[i].style.height = `${array[i]}px`;
             bars[j].style.height = `${array[j]}px`;
+            bars[i].className = 'bar swapping';
+            bars[j].className = 'bar swapping';
+            await sleep(delay);
         }
-        
-        bars[j].style.backgroundColor = "#3a86ff";
+        bars[j].className = 'bar';
     }
-    
-    await new Promise(r => setTimeout(r, delay));
+    swapCount++;
+    updateMetrics();
     [array[i + 1], array[high]] = [array[high], array[i + 1]];
     bars[i + 1].style.height = `${array[i + 1]}px`;
     bars[high].style.height = `${array[high]}px`;
-    bars[i + 1].style.backgroundColor = "#4caf50";
-    bars[high].style.backgroundColor = "#3a86ff";
-    
+    bars[i + 1].className = 'bar sorted';
+    bars[high].className = 'bar';
+    await sleep(delay);
     return i + 1;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 // Initialize

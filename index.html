@@ -1,32 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sorting Algorithm Visualizer</title>
+    <title>Sorting Visualizer</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
+
 <body>
     <header>
         <div class="header-content">
-            <h1>Algorithm Visualizer</h1>
-            <p>Visualize how different sorting algorithms work</p>
+            <h1>Sorting Visualizer</h1>
+            <p>Visualize and compare popular sorting algorithms interactively</p>
         </div>
     </header>
-    
     <main>
         <div class="controls">
-            <div class="control-group">
-                <button id="randomizeBtn" class="btn primary">
-                    <i class="fas fa-random"></i> Randomize
-                </button>
-                <button id="sortBtn" class="btn accent">
-                    <i class="fas fa-play"></i> Sort
-                </button>
-            </div>
-            
             <div class="control-group">
                 <label for="algoSelect">Algorithm</label>
                 <select id="algoSelect" class="styled-select">
@@ -37,34 +26,40 @@
                     <option value="quick">Quick Sort</option>
                 </select>
             </div>
-            
             <div class="control-group">
                 <label for="sizeSlider">Array Size: <span id="sizeValue">50</span></label>
-                <input type="range" min="10" max="100" value="50" id="sizeSlider" class="styled-slider">
+                <input type="range" id="sizeSlider" min="10" max="150" value="50" class="styled-slider">
             </div>
-            
             <div class="control-group">
                 <label for="speedSlider">Speed: <span id="speedValue">50</span></label>
-                <input type="range" min="1" max="100" value="50" id="speedSlider" class="styled-slider">
+                <input type="range" id="speedSlider" min="1" max="100" value="50" class="styled-slider">
             </div>
+            <button id="randomizeBtn" class="btn primary"><i class="fa fa-random"></i> New Array</button>
+            <button id="sortBtn" class="btn accent"><i class="fa fa-play"></i> Sort</button>
         </div>
-        
         <div class="visualization">
-            <div class="array-container" id="array"></div>
+            <div id="array" class="array-container"></div>
             <div class="legend">
-                <div class="legend-item"><span class="color-bubble"></span> Bubble Sort</div>
-                <div class="legend-item"><span class="color-selection"></span> Selection Sort</div>
-                <div class="legend-item"><span class="color-insertion"></span> Insertion Sort</div>
-                <div class="legend-item"><span class="color-merge"></span> Merge Sort</div>
-                <div class="legend-item"><span class="color-quick"></span> Quick Sort</div>
+                <span><span class="legend-bar default"></span> Default</span>
+                <span><span class="legend-bar comparing"></span> Comparing</span>
+                <span><span class="legend-bar swapping"></span> Swapping</span>
+                <span><span class="legend-bar sorted"></span> Sorted</span>
+                <span><span class="legend-bar key"></span> Key Element</span>
             </div>
+            <div class="metrics">
+                <span>Comparisons: <span id="comparisonCount">0</span></span>
+                <span>Swaps: <span id="swapCount">0</span></span>
+            </div>
+            <details class="algo-description">
+                <summary>Algorithm Description</summary>
+                <p id="algoDesc"></p>
+            </details>
         </div>
     </main>
-
     <footer>
-        <p>Created with <i class="fas fa-heart"></i> for algorithm enthusiasts</p>
+        Sorting Visualizer
     </footer>
-
     <script src="script.js"></script>
 </body>
+
 </html>
